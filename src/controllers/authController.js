@@ -36,10 +36,13 @@ exports.register = async (req, res) => {
       return res.status(400).json({ error: "Rol no encontrado" });
     }
 
+    const hashedPassword = await user.hashPassword(password);
+    user.password = hashedPassword;
+
     // Crear el nuevo usuario
     const user = new User({
       username,
-      password: password,
+      password: hashedPassword,
       email,
       firstName,
       lastName,
@@ -190,8 +193,7 @@ exports.resetPassword = async (req, res) => {
     }
 
     // Encriptar la nueva contraseña antes de guardarla
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(password, salt);
+    user.password = await user.hashPassword(password);
 
     // Eliminar el token y la fecha de expiración después de usarlo
     user.resetPasswordToken = undefined;
